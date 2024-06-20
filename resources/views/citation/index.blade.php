@@ -1,0 +1,197 @@
+@extends('layouts.master')
+@section('title')
+  Citation ระดับชาติ
+@endsection
+@section('css')
+    <link href="{{ URL::asset('build/libs/jsvectormap/css/jsvectormap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('build/libs/swiper/swiper-bundle.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('build/css/datatable/dataTables.bootstrap5.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('build/css/datatable/responsive.bootstrap.min.css') }}" rel="stylesheet" type="text/css" />
+    <link href="{{ URL::asset('build/css/datatable/buttons.dataTables.min.css') }}" rel="stylesheet" type="text/css" />
+
+@endsection
+@section('content')
+@component('components.breadcrumb')
+    @slot('li_1')  Citation ระดับชาติ @endslot
+    @slot('title') Citation ระดับชาติ @endslot
+@endcomponent
+<div class="row">
+  <div class="col">
+    <div class="h-100">
+        <div class="row mb-3 pb-1">
+          <div class="row row-cols-lg-6 g-3 align-items-center">
+            <div class="col-12">
+              <select class="form-control" id="year" name="year">
+                <option value="">เลือกปี</option>
+                @for($i = 0; $i <= 4;$i++)
+                  <option value="{{ date('Y') - $i }}">{{ date('Y') - $i }}</option>
+                @endfor
+              </select>
+            </div>
+            <div class="col-12">
+              <select class="form-control" id="department" name="department">
+                <option value="">เลือกสังกัด</option>
+                @foreach($departments as $department)
+                  <option value="{{ $department }}">{{ $department }}</option>
+                @endforeach
+              </select>
+            </div>
+            <div class="col-12">
+              <button class="btn btn-info" id="btn_search">ค้นหา</button>
+              <button class="btn btn-outline-warning waves-effect waves-light material-shadow-none" id="btn_clear">ล้างการค้นหา</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-xl-6 col-sm-12">
+            <div class="card">
+              <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">จำนวนผลงานที่มี Citation ย้อนหลัง 5 ปี</h4>
+              </div>
+              <div class="card-body p-2">
+                <div class="w-100">
+                  <div id="chartY" class="apex-charts" dir="ltr"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col-xl-6 col-sm-12">
+            <div class="card">
+              <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">จำนวนผลงานที่มี Citation ย้อนหลัง 5 ปี แยกตามสังกัดผู้ประพันธ์</h4>
+              </div>
+              <div class="card-body p-2">
+                <div class="w-100">
+                  <div id="chartD" class="apex-charts" dir="ltr"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-sm-12">
+            <div class="card">
+              <div class="card-body">
+                <table id="tb" class="display table table-bordered dt-responsive" style="width:100%">
+                  <thead class="table-info">
+                      <tr class="text-center">
+                          <th>Title</th>
+                          <th>Author</th>
+                          <th>ชื่อนักวิจัยคณะสหวิทยาการ</th>
+                          <th>สังกัด</th>
+                          <th>Year</th>
+                          <th>ฐานข้อมูล</th>
+                          <th>link</th>
+                      </tr>
+                  </thead>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+    </div>
+  </div>
+</div>
+
+@endsection
+@section('script')
+  <script src="{{ URL::asset('build/libs/apexcharts/apexcharts.min.js') }}"></script>
+  <script src="{{ URL::asset('build/libs/swiper/swiper-bundle.min.js') }}"></script>
+  <script src="{{ URL::asset('build/js/app.js') }}"></script>
+  <script src="{{ URL::asset('build/js/datatable/jquery.dataTables.min.js') }}"></script>
+  <script src="{{ URL::asset('build/js/datatable/dataTables.bootstrap5.min.js') }}"></script>
+  <script src="{{ URL::asset('build/js/datatable/dataTables.responsive.min.js') }}"></script>
+  <script src="{{ URL::asset('build/js/datatable/dataTables.buttons.min.js') }}"></script>
+  <script>
+    $( document ).ready(function() {
+
+      getChart('year')
+      getChart('department')
+      const option_choices = {
+        shouldSort: false
+      }
+
+      let choices_year = new Choices('#year', option_choices)
+      let choices_depart = new Choices('#department', option_choices)
+
+      let chartY = new ApexCharts(document.querySelector("#chartY"), options_chart)
+      chartY.render()
+
+      let chartD = new ApexCharts(document.querySelector("#chartD"), options_chart)
+      chartD.render()
+
+      let tb = $('#tb').DataTable({
+        scrollX: true,
+        processing: true,
+        searching: true,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        ajax: {
+          url: "citation/list",
+          type: "POST",
+          data: function (d) {
+            d.year = $("#year").val()
+            d.department = $("#department").val()
+          }
+        },
+        columns: [
+          { "data": "title" },
+          { "data": "author" },
+          { "data": "name" },
+          { "data": "department" },
+          { "data": "year" },
+          { "data": "database" },
+          { "data": "link" },
+        ]
+      })
+
+      function getChart(chartType){
+
+        $.ajax({
+          url: "/citation/chart",
+          method: "POST",
+          data: {
+            year: $("#year").val(),
+            department: $("#department").val(),
+            type: chartType
+          }
+        }).done(function(response) {
+
+          if(chartType === 'year'){
+            chartY.updateOptions({
+              labels: response.label,
+            })
+
+            chartY.updateSeries(response.data)
+          }else{
+            chartD.updateOptions({
+              labels: response.label,
+            })
+
+            chartD.updateSeries(response.data)
+          }
+        })
+
+      }
+
+      $('#btn_search').click(function(){
+        reloadData()
+      })
+
+      $('#btn_clear').click(function(){
+        choices_year.setChoiceByValue("")
+        choices_depart.setChoiceByValue("")
+        reloadData()
+      })
+
+      function reloadData(){
+        tb.ajax.reload()
+        getChart('year')
+        getChart('department')
+
+      }
+
+    })
+  </script>
+@endsection
