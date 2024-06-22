@@ -54,7 +54,7 @@
         "gmaps": "^0.4.25",
         "gridjs": "^6.0.6",
         "isotope-layout": "^3.0.6",
-        "jsvectormap": "1.4.2",
+        "jsvectormap": "1.5.3",
         "leaflet": "^1.9.4",
         "list.js": "^2.3.1",
         "list.pagination.js": "^0.1.1",
