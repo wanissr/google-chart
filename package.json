@@ -32,7 +32,7 @@
         "apexcharts": "^3.41.0",
         "bootstrap": "5.3.2",
         "card": "^2.5.4",
-        "chart.js": "4.3.0",
+        "chart.js": "4.4.3",
         "choices.js": "^10.2.0",
         "cleave.js": "^1.6.0",
         "dom-autoscroller": "^2.3.4",
