@@ -6,3 +6,4 @@ sphinx<2
 sphinx-rtd-theme<0.5
 readthedocs-sphinx-ext<2.3
 jinja2<3.1.0
+setuptools>=70.0.0 # not directly required, pinned by Snyk to avoid a vulnerability
